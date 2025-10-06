@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
+import { handleSlashCommand } from './interaction';
 
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
@@ -35,6 +36,16 @@ const commands = [
   new SlashCommandBuilder()
     .setName('list-cart')
     .setDescription('Show all items in the shopping cart')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('shopped')
+    .setDescription('Remove an item from the shopping list')
+    .addStringOption((opt) =>
+      opt
+        .setName('item')
+        .setDescription('Item to remove')
+        .setRequired(true),
+    )
     .toJSON(),
 ];
 
@@ -118,34 +129,7 @@ client.on(Events.MessageCreate, async (message) => {
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.commandName === 'shop') {
-    try {
-      const item = interaction.options.getString('item', true);
-      await addItemToCart(item);
-      await interaction.reply(`Added "${item}" to the shopping list 🛒`);
-    } catch (e) {
-      console.error('slash handler error:', e);
-      if (interaction.isRepliable()) {
-        await interaction.reply({ content: 'Something went wrong…', ephemeral: true });
-      }
-    }
-  } else if (interaction.commandName === 'list-cart') {
-    try {
-      const cart = await readCart();
-      if (cart.length === 0) {
-        await interaction.reply('🛒 Shopping cart is empty');
-      } else {
-        const items = cart.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
-        await interaction.reply(`🛒 **Shopping Cart:**\n${items}`);
-      }
-    } catch (e) {
-      console.error('slash handler error:', e);
-      if (interaction.isRepliable()) {
-        await interaction.reply({ content: 'Something went wrong…', ephemeral: true });
-      }
-    }
-  }
+  await handleSlashCommand(interaction);
 });
 
 client.once(Events.ClientReady, async (c) => {

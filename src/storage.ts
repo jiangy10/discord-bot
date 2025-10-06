@@ -30,6 +30,14 @@ export async function addItemToCart(item: string): Promise<void> {
   await writeCart(cart);
 }
 
+export async function removeItemFromCart(item: string): Promise<void> {
+  const cart = await readCart();
+  const index = cart.indexOf(item);
+  if (index !== -1) {
+    cart.splice(index, 1);
+    await writeCart(cart);
+  }
+}
 export async function clearCart(): Promise<void> {
   await writeCart([]);
 }
