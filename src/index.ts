@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder, Interaction, Message } from 'discord.js';
 import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
 import { handleSlashCommand } from './interaction';
@@ -86,7 +86,7 @@ function parseMentionCommand(text: string): { cmd: Cmd; args: string } {
 }
 
 // Respond only when @mentioned; execute if "pseudo-slash" is present, otherwise "woof"
-client.on(Events.MessageCreate, async (message) => {
+client.on(Events.MessageCreate, async (message : Message) => {
   if (message.author.bot || !client.user) return;
 
   if (!message.mentions.users.has(client.user.id)) return; // React only when @mentioned
@@ -127,7 +127,7 @@ client.on(Events.MessageCreate, async (message) => {
 });
 
 
-client.on(Events.InteractionCreate, async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   if (!interaction.isChatInputCommand()) return;
   await handleSlashCommand(interaction);
 });
