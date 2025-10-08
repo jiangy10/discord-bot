@@ -1,69 +1,69 @@
-import { readFile, writeFile, mkdir } from 'fs/promises';
-import { dirname } from 'path';
+import { createClient } from '@supabase/supabase-js'
 
-const CART_PATH = './src/data/shopping_cart.json';
-const NOTES_PATH = './src/data/notes.json';
+const supabaseUrl = 'https://uyzjlpmabkxgwvpoogyb.supabase.co'
+const supabaseKey: string = process.env.SUPABASE_KEY!
+if (!supabaseKey) {
+  throw new Error('Missing SUPABASE_KEY');
+}
+
+// Init database client
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function readCart(): Promise<string[]> {
   try {
-    const data = await readFile(CART_PATH, 'utf-8');
-    return JSON.parse(data);
+    const { data, error } = await supabase.from('ShoppingCart').select('item');
+    if (error) {
+      console.error('Failed to read cart from Supabase:', error);
+      return [];
+    }
+    return data.map((entry: { item: string }) => entry.item);
   } catch (error) {
+    console.error('Unexpected error while reading cart:', error);
     return [];
   }
 }
 
-async function writeCart(items: string[]): Promise<void> {
+export async function addItemToCart(item: string): Promise<void> {
   try {
-    // Ensure directory exists
-    await mkdir(dirname(CART_PATH), { recursive: true });
-    await writeFile(CART_PATH, JSON.stringify(items, null, 2), 'utf-8');
+    await supabase.from('ShoppingCart').insert({ item: item });
   } catch (error) {
-    console.error('Failed to write cart:', error);
+    console.error('Failed to add item to cart:', error);
     throw error;
   }
 }
 
-export async function addItemToCart(item: string): Promise<void> {
-  const cart = await readCart();
-  cart.push(item);
-  await writeCart(cart);
-}
-
 export async function removeItemFromCart(item: string): Promise<void> {
-  const cart = await readCart();
-  const index = cart.indexOf(item);
-  if (index !== -1) {
-    cart.splice(index, 1);
-    await writeCart(cart);
+  if (item === 'all') {
+    await supabase.from('ShoppingCart').delete();
+    return;
   }
-}
-
-export async function clearCart(): Promise<void> {
-  await writeCart([]);
-}
-
-async function writeNote(items: string[]): Promise<void> {
   try {
-    await mkdir(dirname(NOTES_PATH), { recursive: true });
-    await writeFile(NOTES_PATH, JSON.stringify(items, null, 2), 'utf-8');
+    await supabase.from('ShoppingCart').delete().eq('item', item);
   } catch (error) {
-    console.error('Failed to write notes:', error);
+    console.error('Failed to remove item from cart:', error);
     throw error;
   }
 }
 
 export async function addNote(note: string): Promise<void> {
-  const notes = await readNotes();
-  notes.push(note);
-  await writeNote(notes);
+  try {
+    await supabase.from('Notes').insert({ note: note });
+  } catch (error) {
+    console.error('Failed to add note:', error);
+    throw error;
+  }
 }
 
 export async function readNotes(): Promise<string[]> {
   try {
-    const data = await readFile(NOTES_PATH, 'utf-8');
-    return JSON.parse(data);
+    const { data, error } = await supabase.from('Notes').select('note');
+    if (error) {
+      console.error('Failed to read notes:', error);
+      return [];
+    }
+    return data.map((entry: { note: string }) => entry.note);
   } catch (error) {
-    return [];
+    console.error('Failed to read notes:', error);
+    throw error;
   }
 }
