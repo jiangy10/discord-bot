@@ -85,48 +85,6 @@ function parseMentionCommand(text: string): { cmd: Cmd; args: string } {
   return { cmd: map[key] ?? null, args: argstr };
 }
 
-// Respond only when @mentioned; execute if "pseudo-slash" is present, otherwise "woof"
-client.on(Events.MessageCreate, async (message : Message) => {
-  if (message.author.bot || !client.user) return;
-
-  if (!message.mentions.users.has(client.user.id)) return; // React only when @mentioned
-
-  const restText = stripBotMention(message.content, client.user.id);
-  const { cmd, args } = parseMentionCommand(restText);
-
-  try {
-    if (!cmd) {
-      await message.reply('woof');
-      return;
-    }
-
-    if (cmd === 'shop') {
-      if (!args) {
-        await message.reply('Please provide an item, e.g., `@me /shop heavy cream`');
-      } else {
-        await addItemToCart(args);
-        await message.reply(`Added "${args}" to the shopping list 🛒`);
-      }
-    } else if (cmd === 'list') {
-      await message.reply('(demo) Shopping list is empty');
-    } else if (cmd === 'list-cart') {
-      const cart = await readCart();
-      if (cart.length === 0) {
-        await message.reply('🛒 Shopping cart is empty');
-      } else {
-        const items = cart.map((item, idx) => `${idx + 1}. ${item}`).join('\n');
-        await message.reply(`🛒 **Shopping Cart:**\n${items}`);
-      }
-    } else if (cmd === 'help') {
-      await message.reply('Usage: `@me /shop <item>`, `@me /list-cart`, `@me /list`. e.g., `@me /shop heavy cream`');
-    }
-  } catch (e) {
-    console.error('handler error:', e);
-    await message.reply('Something went wrong…');
-  }
-});
-
-
 client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   if (!interaction.isChatInputCommand()) return;
   await handleSlashCommand(interaction);
