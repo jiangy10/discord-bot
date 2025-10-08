@@ -2,18 +2,18 @@ import { readFile, writeFile, mkdir } from 'fs/promises';
 import { dirname } from 'path';
 
 const CART_PATH = './src/data/shopping_cart.json';
+const NOTES_PATH = './src/data/notes.json';
 
 export async function readCart(): Promise<string[]> {
   try {
     const data = await readFile(CART_PATH, 'utf-8');
     return JSON.parse(data);
   } catch (error) {
-    // If file doesn't exist or is invalid, return empty array
     return [];
   }
 }
 
-export async function writeCart(items: string[]): Promise<void> {
+async function writeCart(items: string[]): Promise<void> {
   try {
     // Ensure directory exists
     await mkdir(dirname(CART_PATH), { recursive: true });
@@ -38,6 +38,32 @@ export async function removeItemFromCart(item: string): Promise<void> {
     await writeCart(cart);
   }
 }
+
 export async function clearCart(): Promise<void> {
   await writeCart([]);
+}
+
+async function writeNote(items: string[]): Promise<void> {
+  try {
+    await mkdir(dirname(NOTES_PATH), { recursive: true });
+    await writeFile(NOTES_PATH, JSON.stringify(items, null, 2), 'utf-8');
+  } catch (error) {
+    console.error('Failed to write notes:', error);
+    throw error;
+  }
+}
+
+export async function addNote(note: string): Promise<void> {
+  const notes = await readNotes();
+  notes.push(note);
+  await writeNote(notes);
+}
+
+export async function readNotes(): Promise<string[]> {
+  try {
+    const data = await readFile(NOTES_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch (error) {
+    return [];
+  }
 }

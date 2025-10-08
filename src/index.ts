@@ -47,42 +47,46 @@ const commands = [
         .setRequired(true),
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('note')
+    .setDescription('Take notes')
+    .addStringOption((opt) =>
+      opt
+        .setName('note')
+        .setDescription('Note to add')
+        .setRequired(true),
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('list-notes')
+    .setDescription('List all notes')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('delete-note')
+    .setDescription('Delete a note')
+    .addStringOption((opt) =>
+      opt
+        .setName('note')
+        .setDescription('Note to delete')
+        .setRequired(true),
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
   if (guildId) {
+    // register to specific Guild (development environment, immediate effect)
     await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
     console.log(`✅ Guild slash registered to ${guildId}`);
+    
+    // FIXME: clear global commands
+    await rest.put(Routes.applicationCommands(clientId), { body: [] });
+    console.log('✅ Global commands cleared');
   } else {
+    // register as global command
     await rest.put(Routes.applicationCommands(clientId), { body: commands });
     console.log('✅ Global slash registered (may take time to propagate)');
   }
-}
-
-function stripBotMention(content: string, botId: string) {
-  const re = new RegExp(`<@!?${botId}>`, 'g');
-  return content.replace(re, '').trim();
-}
-
-type Cmd = 'shop' | 'list' | 'list-cart' | 'help' | null;
-
-function parseMentionCommand(text: string): { cmd: Cmd; args: string } {
-  let t = text.trim();
-  if (!t) return { cmd: null, args: '' };
-
-  if (t.startsWith('/')) t = t.slice(1).trim();
-  const [first, ...rest] = t.split(/\s+/);
-  const argstr = rest.join(' ').trim();
-
-  const map: Record<string, Cmd> = {
-    shop: 'shop',
-    list: 'list',
-    'list-cart': 'list-cart',
-    help: 'help',
-  };
-
-  const key = (first || '').toLowerCase();
-  return { cmd: map[key] ?? null, args: argstr };
 }
 
 client.on(Events.InteractionCreate, async (interaction : Interaction) => {
@@ -90,6 +94,7 @@ client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   await handleSlashCommand(interaction);
 });
 
+// log in and register commands
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
   try {

@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction } from 'discord.js';
-import { addItemToCart, clearCart, readCart, removeItemFromCart } from './storage';
+import { addItemToCart, clearCart, readCart, removeItemFromCart, readNotes, addNote } from './storage';
 
 export async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
   const { commandName } = interaction;
@@ -29,6 +29,20 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
             else{
                 await removeItemFromCart(itemToRemove);
                 await interaction.reply(`Removed "${itemToRemove}" from the shopping list 🛒`);
+            }
+            break;
+        case 'note': // take notes
+            const note = interaction.options.getString('note', true);
+            await addNote(note);
+            await interaction.reply(`Added "${note}" to the notes 📝`);
+            break;
+        case 'list-notes': // list all notes
+            const notes = await readNotes();
+            if (notes.length === 0) {
+                await interaction.reply('📝 Notes are empty');
+            } else {
+                const notesList = notes.map((note, idx) => `${idx + 1}. ${note}`).join('\n');
+                await interaction.reply(`📝 **Notes:**\n${notesList}`);
             }
             break;
         default:
