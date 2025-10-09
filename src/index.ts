@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder, I
 import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
 import { handleSlashCommand } from './interaction';
+import http from 'http';
 
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
@@ -105,3 +106,24 @@ client.once(Events.ClientReady, async (c) => {
 });
 
 client.login(token);
+
+// Create HTTP server for Render
+const PORT = process.env.PORT || 3000;
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ 
+      status: 'ok', 
+      bot: client.user?.tag || 'connecting...',
+      uptime: process.uptime()
+    }));
+  } else {
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Not found' }));
+  }
+});
+
+server.listen(PORT, () => {
+  console.log(`🌐 HTTP server listening on port ${PORT}`);
+});
