@@ -34,7 +34,7 @@ export async function addItemToCart(item: string): Promise<void> {
 
 export async function removeItemFromCart(item: string): Promise<void> {
   if (item === 'all') {
-    await supabase.from('ShoppingCart').delete();
+    await supabase.from('ShoppingCart').delete().neq('id', 0);
     return;
   }
   try {
