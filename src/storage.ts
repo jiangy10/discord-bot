@@ -67,3 +67,16 @@ export async function readNotes(): Promise<string[]> {
     throw error;
   }
 }
+
+export async function removeNoteFromNotes(note: string): Promise<void> {
+  if (note === 'all') {
+    await supabase.from('Notes').delete().neq('id', 0);
+    return;
+  }
+  try {
+    await supabase.from('Notes').delete().eq('note', note);
+  } catch (error) {
+    console.error('Failed to remove note from notes:', error);
+    throw error;
+  }
+}

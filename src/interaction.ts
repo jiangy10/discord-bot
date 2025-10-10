@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction } from 'discord.js';
-import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote } from './storage';
+import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes } from './storage';
 
 export async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
   const { commandName } = interaction;
@@ -23,7 +23,11 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
         case 'shopped': // remove item from card
             const itemToRemove = interaction.options.getString('item', true);
             await removeItemFromCart(itemToRemove);
-            await interaction.reply(`Removed "${itemToRemove}" from the shopping list 🛒`);
+            if (itemToRemove === 'all') {
+                await interaction.reply('Cleared the shopping list 🛒');
+            }else{
+                await interaction.reply(`Removed "${itemToRemove}" from the shopping list 🛒`);
+            }
             break;
         case 'note': // take notes
             const note = interaction.options.getString('note', true);
@@ -37,6 +41,15 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
             } else {
                 const notesList = notes.map((note, idx) => `${idx + 1}. ${note}`).join('\n');
                 await interaction.reply(`📝 **Notes:**\n${notesList}`);
+            }
+            break;
+        case 'delete-note': // delete a note
+            const noteToDelete = interaction.options.getString('note', true);
+            await removeNoteFromNotes(noteToDelete);
+            if (noteToDelete === 'all') {
+                await interaction.reply('Cleared the notes 📝');
+            }else{
+                await interaction.reply(`Deleted "${noteToDelete}" from the notes 📝`);
             }
             break;
         default:
