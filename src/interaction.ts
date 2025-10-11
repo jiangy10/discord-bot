@@ -52,6 +52,12 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
                 await interaction.reply(`Deleted "${noteToDelete}" from the notes 📝`);
             }
             break;
+        case 'save-file': // save a file
+            const file = interaction.options.getAttachment('file', true);
+            console.log(interaction.id); // Print message/interaction ID
+            //TODO: save file and interaction id to database
+            await interaction.reply(`Saved "${file.url}" to the file 📂`);
+            break;   
         default:
             await interaction.reply({ content: 'Unknown command', ephemeral: true });
             break;

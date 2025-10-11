@@ -72,6 +72,16 @@ const commands = [
         .setRequired(true),
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('save-file')
+    .setDescription('Save a file')
+    .addAttachmentOption((opt) =>
+      opt
+        .setName('file')
+        .setDescription('File to save')
+        .setRequired(true),
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
