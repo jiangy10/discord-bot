@@ -82,6 +82,16 @@ const commands = [
         .setRequired(true),
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('get-file')
+    .setDescription('Get a file')
+    .addStringOption((opt) =>
+      opt
+        .setName('file')
+        .setDescription('File to find')
+        .setRequired(true),
+    )
+    .toJSON()
 ];
 
 async function registerCommands() {
