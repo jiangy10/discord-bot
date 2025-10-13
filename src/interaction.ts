@@ -1,5 +1,5 @@
-import { ChatInputCommandInteraction } from 'discord.js';
-import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes } from './storage';
+import { ChatInputCommandInteraction, Client, Attachment} from 'discord.js';
+import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes, addFile } from './storage';
 
 export async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
   const { commandName } = interaction;
@@ -53,19 +53,28 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
             }
             break;
         case 'save-file': // save a file
-            const file = interaction.options.getAttachment('file', true);
-            console.log(interaction.id); // Print message/interaction ID
-            //TODO: save file and interaction id to database
-            await interaction.reply(`Saved "${file.url}" to the file 📂`);
-            break;   
+            const file: Attachment = interaction.options.getAttachment('file', true)
+            const description: string = interaction.options.getString('description', true);
+            // defer reply to avoid timeout
+            await interaction.deferReply();
+            await addFile(file.url, description, interaction.channelId, interaction.id);
+            await interaction.editReply(`Saved "${file.url}" to the file 📂`);
+            break;
+        case 'get-file': // get a file
+            break;
+            
         default:
             await interaction.reply({ content: 'Unknown command', ephemeral: true });
             break;
     }
   } catch (error) {
     console.error('Slash command handler error:', error);
-    if (interaction.isRepliable()) {
+    // check if interaction is replied or deferred
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: 'Something went wrong…', ephemeral: true });
+    } else {
+      // if already replied, use followUp to send follow up message
+      await interaction.followUp({ content: 'Something went wrong…', ephemeral: true });
     }
   }
 }

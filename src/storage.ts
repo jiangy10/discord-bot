@@ -80,3 +80,12 @@ export async function removeNoteFromNotes(note: string): Promise<void> {
     throw error;
   }
 }
+
+export async function addFile(fileURL: string, description: string, channelId: string, interactionId: string): Promise<void> {
+  try {
+    await supabase.from('Files').insert({ url: fileURL, description: description, channelId: channelId, interactionId: interactionId });
+  } catch (error) {
+    console.error('Failed to add file:', error);
+    throw error;
+  }
+}
