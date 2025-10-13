@@ -81,6 +81,12 @@ const commands = [
         .setDescription('File to save')
         .setRequired(true),
     )
+    .addStringOption((opt) =>
+      opt
+        .setName('description')
+        .setDescription('Description of the file')
+        .setRequired(true),
+    )
     .toJSON(),
   new SlashCommandBuilder()
     .setName('get-file')
