@@ -80,10 +80,10 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
     console.error('Slash command handler error:', error);
     // check if interaction is replied or deferred
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: 'Something went wrong…', ephemeral: true });
+      await interaction.reply({ content: 'Something went wrong… 😱', ephemeral: true });
     } else {
       // if already replied, use followUp to send follow up message
-      await interaction.followUp({ content: 'Something went wrong…', ephemeral: true });
+      await interaction.followUp({ content: 'Something went wrong… 😱', ephemeral: true });
     }
   }
 }
