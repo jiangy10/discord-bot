@@ -1,5 +1,6 @@
-import { ChatInputCommandInteraction, Client, Attachment} from 'discord.js';
-import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes, addFile } from './storage';
+import { ChatInputCommandInteraction, Attachment} from 'discord.js';
+import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes, addFile, getFile } from './storage';
+import { File } from './models';
 
 export async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
   const { commandName } = interaction;
@@ -61,6 +62,14 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
             await interaction.editReply(`Saved "${file.url}" to the file 📂`);
             break;
         case 'get-file': // get a file
+            await interaction.deferReply();
+            const files : File[] = await getFile(interaction.options.getString('keyword', true));
+            if (files.length === 0) {
+                await interaction.editReply('No file found');
+            } else {
+                const filesList = files.map((file, idx) => `${idx + 1}. ${file.description}: ${file.url}`).join('\n');
+                await interaction.editReply(`📂 **Files:**\n${filesList}`);
+            }
             break;
             
         default:

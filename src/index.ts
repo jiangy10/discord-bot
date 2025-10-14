@@ -93,8 +93,8 @@ const commands = [
     .setDescription('Get a file')
     .addStringOption((opt) =>
       opt
-        .setName('file')
-        .setDescription('File to find')
+        .setName('keyword')
+        .setDescription('File name or any keyword')
         .setRequired(true),
     )
     .toJSON()

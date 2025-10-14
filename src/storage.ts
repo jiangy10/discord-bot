@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { File } from './models'
 
 const supabaseUrl = process.env.SUPABASE_URL!
 const supabaseKey: string = process.env.SUPABASE_KEY!
@@ -86,6 +87,20 @@ export async function addFile(fileURL: string, description: string, channelId: s
     await supabase.from('Files').insert({ url: fileURL, description: description, channelId: channelId, interactionId: interactionId });
   } catch (error) {
     console.error('Failed to add file:', error);
+    throw error;
+  }
+}
+
+export async function getFile(keywords: string): Promise<File[]> {
+  try {
+    const { data, error } = await supabase.from('Files').select('*').ilike('description', `%${keywords}%`);
+    if (error) {
+      console.error('Failed to get file:', error);
+      return [];
+    }
+    return data;
+  } catch (error) {
+    console.error('Failed to get file:', error);
     throw error;
   }
 }
