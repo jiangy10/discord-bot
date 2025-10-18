@@ -97,7 +97,31 @@ const commands = [
         .setDescription('File name or any keyword')
         .setRequired(true),
     )
-    .toJSON()
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('meal')
+    .setDescription('Add a meal to meal plan')
+    .addStringOption((opt) =>
+      opt
+        .setName('meal')
+        .setDescription('Meal to add')
+        .setRequired(true),
+    )
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('list-meals')
+    .setDescription('List all meals')
+    .toJSON(),
+  new SlashCommandBuilder()
+    .setName('delete-meal')
+    .setDescription('Delete a meal from meal plan')
+    .addStringOption((opt) =>
+      opt
+        .setName('meal')
+        .setDescription('Meal to delete')
+        .setRequired(true),
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {

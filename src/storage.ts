@@ -104,3 +104,39 @@ export async function getFile(keywords: string): Promise<File[]> {
     throw error;
   }
 }
+
+export async function addMeal(meal: string): Promise<void> {
+  try {
+    await supabase.from('Meals').insert({ meal: meal });
+  } catch (error) {
+    console.error('Failed to add meal:', error);
+    throw error;
+  }
+}
+
+export async function getMeals(): Promise<string[]> {
+  try {
+    const { data, error } = await supabase.from('Meals').select('*');
+    if (error) {
+      console.error('Failed to get meal:', error);
+      return [];
+    }
+    return data.map((entry: { meal: string }) => entry.meal);
+  } catch (error) {
+    console.error('Failed to get meal:', error);
+    throw error;
+  }
+}
+
+export async function deleteMeal(meal: string): Promise<void> {
+  if (meal === 'all') {
+    await supabase.from('Meals').delete().neq('id', 0);
+    return;
+  }
+  try {
+    await supabase.from('Meals').delete().eq('meal', meal);
+  } catch (error) {
+    console.error('Failed to delete meal:', error);
+    throw error;
+  }
+}

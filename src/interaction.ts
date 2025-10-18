@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Attachment} from 'discord.js';
-import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes, addFile, getFile } from './storage';
+import { addItemToCart, readCart, removeItemFromCart, readNotes, addNote, removeNoteFromNotes, addFile, getFile, addMeal, getMeals, deleteMeal } from './storage';
 import { File } from './models';
 
 export async function handleSlashCommand(interaction: ChatInputCommandInteraction) {
@@ -71,19 +71,53 @@ export async function handleSlashCommand(interaction: ChatInputCommandInteractio
                 await interaction.editReply(`📂 **Files:**\n${filesList}`);
             }
             break;
-            
+        case 'meal': // add a meal to meal plan
+            await interaction.deferReply();
+            const meal = interaction.options.getString('meal', true);
+            await addMeal(meal);
+            await interaction.editReply(`Added "${meal}" to the meal plan 🍽️`);
+            break;
+        case 'list-meals': // list all meals
+            await interaction.deferReply();
+            const meals = await getMeals();
+            if (meals.length === 0) {
+                await interaction.editReply('🍽️ Meal plan is empty');
+            }
+            else{
+                const mealsList = meals.map((meal, idx) => `${idx + 1}. ${meal}`).join('\n');
+                await interaction.editReply(`🍽️ **Meal Plan:**\n${mealsList}`);
+            }
+            break;
+        case 'delete-meal': // delete a meal from meal plan
+            await interaction.deferReply();
+            const mealToDelete = interaction.options.getString('meal', true);
+            await deleteMeal(mealToDelete);
+            if (mealToDelete === 'all') {
+                await interaction.editReply('Cleared the meal plan 🍽️');
+            }
+            else{
+                await interaction.editReply(`Deleted "${mealToDelete}" from the meal plan 🍽️`);
+            }
+            break;
         default:
             await interaction.reply({ content: 'Unknown command', ephemeral: true });
             break;
     }
   } catch (error) {
     console.error('Slash command handler error:', error);
-    // check if interaction is replied or deferred
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: 'Something went wrong… 😱', ephemeral: true });
-    } else {
-      // if already replied, use followUp to send follow up message
-      await interaction.followUp({ content: 'Something went wrong… 😱', ephemeral: true });
+    // Try to respond to the interaction if possible
+    try {
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: 'Something went wrong… 😱', ephemeral: true });
+      } else if (interaction.deferred) {
+        await interaction.editReply({ content: 'Something went wrong… 😱' });
+      } else {
+        // if already replied, use followUp to send follow up message
+        await interaction.followUp({ content: 'Something went wrong… 😱', ephemeral: true });
+      }
+    } catch (followUpError) {
+      // If we can't respond to the interaction, just log the error
+      console.error('Failed to send error message to user:', followUpError);
     }
   }
 }
