@@ -122,6 +122,20 @@ const commands = [
         .setRequired(true),
     )
     .toJSON(),
+  new SlashCommandBuilder()
+    .setName('reminder')
+    .setDescription('Set a reminder')
+    .addStringOption((opt) =>
+      opt
+        .setName('date')
+        .setRequired(true),
+    ).addStringOption((opt) =>
+      opt
+        .setName('description')
+        .setDescription('Description of the reminder')
+        .setRequired(true),
+    )
+    .toJSON(),
 ];
 
 async function registerCommands() {
