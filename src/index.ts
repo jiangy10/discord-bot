@@ -128,6 +128,7 @@ const commands = [
     .addStringOption((opt) =>
       opt
         .setName('date')
+        .setDescription('Date of the reminder')
         .setRequired(true),
     ).addStringOption((opt) =>
       opt
