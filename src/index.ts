@@ -3,6 +3,7 @@ import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
+import { fetchJobPost } from './fetchJob';
 
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
@@ -164,6 +165,13 @@ client.on(Events.MessageCreate, async (message: Message) => {
   if (message.author.bot) return;
   
   if (message.mentions.has(client.user!, { ignoreEveryone: true, ignoreRoles: true })) {// bot is mentioned by user
+    // remove bot mention part from message content
+    const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
+    fetchJobPost(6, {
+      keywords: "Software Engineer",
+      geoId: "103644278",
+      maxResults:20,
+    }).then(console.log);
     await message.reply('woof');
   }
 });
