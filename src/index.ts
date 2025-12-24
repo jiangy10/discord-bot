@@ -160,6 +160,14 @@ client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   await handleSlashCommand(interaction);
 });
 
+client.on(Events.MessageCreate, async (message: Message) => {
+  if (message.author.bot) return;
+  
+  if (message.mentions.has(client.user!, { ignoreEveryone: true, ignoreRoles: true })) {// bot is mentioned by user
+    await message.reply('woof');
+  }
+});
+
 // log in and register commands
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ Logged in as ${c.user.tag}`);
