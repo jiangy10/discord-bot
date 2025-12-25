@@ -161,24 +161,47 @@ client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   await handleSlashCommand(interaction);
 });
 
+// call local Llama model
+async function askLlama(userMessage: string): Promise<string> {
+  try {
+    const response = await fetch('http://localhost:11434/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama3.2',
+        stream: false,
+        messages: [{ role: 'user', content: userMessage }],
+      })
+    });
+    const data = await response.json() as { message?: { content?: string } };
+    return data.message?.content || 'Woof, something went wrong :<';
+  } catch (error) {
+    console.error('Llama API error:', error);
+    return 'Woof, not connected to Llama :<';
+  }
+}
+
 client.on(Events.MessageCreate, async (message: Message) => {
   if (message.author.bot) return;
   
   if (message.mentions.has(client.user!, { ignoreEveryone: true, ignoreRoles: true })) {// bot is mentioned by user
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
-    fetchJobPost(12, {
-      keywords: "Software Engineer",
-      geoId: "103644278",
-      locationAllowlist: ["San Francisco", "Bay Area", "Remote", "San Jose", "Palo Alto", "Sunnyvale", "Mountain View", "Santa Clara", "Cupertino", "Redwood City", "CA"],
-      maxResults:5,
-    }).then(
-      (jobs) => {
-        const jobList = jobs.map((job) => 
-          `- Title: ${job.title}\n\tCompany: ${job.company}\n\tLocation: ${job.location}\n\tURL: ${job.url}`).join('\n');
-        message.reply(`Here are the latest job postings:\n${jobList}`);
-      }
-    );
+    // fetchJobPost(12, {
+    //   keywords: "Software Engineer",
+    //   geoId: "103644278",
+    //   locationAllowlist: ["San Francisco", "Bay Area", "Remote", "San Jose", "Palo Alto", "Sunnyvale", "Mountain View", "Santa Clara", "Cupertino", "Redwood City", "CA"],
+    //   maxResults:5,
+    // }).then(
+    //   (jobs) => {
+    //     const jobList = jobs.map((job) => 
+    //       `- Title: ${job.title}\n\tCompany: ${job.company}\n\tLocation: ${job.location}\n\tURL: ${job.url}`).join('\n');
+    //     message.reply(`Here are the latest job postings:\n${jobList}`);
+    //   }
+    // );
+    
+    const llamaResponse = await askLlama(messageContent);
+    await message.reply(llamaResponse);
   }
 });
 
