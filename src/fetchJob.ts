@@ -5,12 +5,15 @@ export type JobPost = {
   company: string;
   location: string;
   url: string;
+  postedText: string;
+  postedMinutes: number;
 };
 
 export type JobFilters = {
-  keywords?: string;    // Job title keywords
-  geoId?: string;       // LinkedIn geo ID
-  maxResults?: number;  // Maximum results
+  keywords?: string;                 // Job title keywords
+  geoId?: string;                    // LinkedIn geo ID
+  locationAllowlist?: string[];      // Location allowlist
+  maxResults?: number;              // Maximum results
 };
 
 function buildLinkedInSearchUrl(hours: number, filters: JobFilters) {
@@ -19,11 +22,38 @@ function buildLinkedInSearchUrl(hours: number, filters: JobFilters) {
   const params = new URLSearchParams();
 
   params.set("keywords", keywords);
-  params.set("f_TPR", `r${seconds}`);  // Time filter: most recent N seconds
-  params.set("sortBy", "DD");          // Sort by date
+  params.set("f_TPR", `r${seconds}`);         // most recent N seconds :contentReference[oaicite:1]{index=1}
+  params.set("sortBy", "DD");                 
+
   if (filters.geoId) params.set("geoId", filters.geoId);
 
   return `https://www.linkedin.com/jobs/search/?${params.toString()}`;
+}
+
+function parsePostedMinutes(postedTextRaw: string): number {
+  const t = postedTextRaw.trim().toLowerCase();
+
+  if (!t) return Number.POSITIVE_INFINITY;
+  if (t.includes("just now")) return 0;
+
+  // Examples:
+  // "3 hours ago", "1 hour ago", "30 minutes ago", "1 day ago"
+  const mMin = t.match(/(\d+)\s*min/);
+  if (mMin) return parseInt(mMin[1], 10);
+
+  const mHour = t.match(/(\d+)\s*hour/);
+  if (mHour) return parseInt(mHour[1], 10) * 60;
+
+  const mDay = t.match(/(\d+)\s*day/);
+  if (mDay) return parseInt(mDay[1], 10) * 24 * 60;
+
+  return Number.POSITIVE_INFINITY;
+}
+
+function locationPass(location: string, allowlist?: string[]) {
+  if (!allowlist || allowlist.length === 0) return true;
+  const L = location.toLowerCase();
+  return allowlist.some(x => L.includes(x.toLowerCase()));
 }
 
 export async function fetchJobPost(hours: number, filters: JobFilters = {}): Promise<JobPost[]> {
@@ -38,9 +68,12 @@ export async function fetchJobPost(hours: number, filters: JobFilters = {}): Pro
 
   try {
     await page.goto(url, { waitUntil: "domcontentloaded" });
+
     await page.waitForTimeout(1500);
 
+    // result list (LinkedIn DOM may change; you need to adjust selector according to the actual page)
     const cards = await page.locator("ul.jobs-search__results-list > li").all();
+
     const results: JobPost[] = [];
 
     for (const card of cards) {
@@ -54,13 +87,25 @@ export async function fetchJobPost(hours: number, filters: JobFilters = {}): Pro
       const href = (await linkEl.getAttribute("href")) ?? "";
       const jobUrl = href ? href.split("?")[0] : "";
 
+      const postedText =
+        (await card.locator("time").first().textContent())?.trim() ??
+        (await card.locator("span").filter({ hasText: /ago|minute|hour|day|just now/i }).first().textContent())?.trim() ??
+        "";
+
+      const postedMinutes = parsePostedMinutes(postedText);
+
       if (!title || !company || !jobUrl) continue;
+
+      // filter by location
+      if (!locationPass(location, filters.locationAllowlist)) continue;
 
       results.push({
         title,
         company,
         location,
         url: jobUrl,
+        postedText,
+        postedMinutes,
       });
     }
 
