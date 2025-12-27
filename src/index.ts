@@ -3,8 +3,8 @@ import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
-import { fetchJobPost } from './fetchJob';
-
+import { fetchJobPost } from './functions/fetchJob';
+import { fetchLlama } from './llama';
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
 const guildId = process.env.GUILD_ID; // for instant effect in development
@@ -161,26 +161,6 @@ client.on(Events.InteractionCreate, async (interaction : Interaction) => {
   await handleSlashCommand(interaction);
 });
 
-// call local Llama model
-async function askLlama(userMessage: string): Promise<string> {
-  try {
-    const response = await fetch('http://localhost:11434/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama3.2',
-        stream: false,
-        messages: [{ role: 'user', content: userMessage }],
-      })
-    });
-    const data = await response.json() as { message?: { content?: string } };
-    return data.message?.content || 'Woof, something went wrong :<';
-  } catch (error) {
-    console.error('Llama API error:', error);
-    return 'Woof, not connected to Llama :<';
-  }
-}
-
 client.on(Events.MessageCreate, async (message: Message) => {
   if (message.author.bot) return;
   
@@ -200,7 +180,7 @@ client.on(Events.MessageCreate, async (message: Message) => {
     //   }
     // );
     
-    const llamaResponse = await askLlama(messageContent);
+    const llamaResponse = await fetchLlama(messageContent);
     await message.reply(llamaResponse);
   }
 });
