@@ -22,10 +22,9 @@ function buildLinkedInSearchUrl(hours: number, filters: JobFilters) {
   const params = new URLSearchParams();
 
   params.set("keywords", keywords);
-  params.set("f_TPR", `r${seconds}`);         // most recent N seconds :contentReference[oaicite:1]{index=1}
+  params.set("geoId", filters.geoId ?? "103644278");
+  params.set("f_TPR", `r${seconds}`);         // most recent N seconds
   params.set("sortBy", "DD");                 
-
-  if (filters.geoId) params.set("geoId", filters.geoId);
 
   return `https://www.linkedin.com/jobs/search/?${params.toString()}`;
 }
@@ -36,8 +35,6 @@ function parsePostedMinutes(postedTextRaw: string): number {
   if (!t) return Number.POSITIVE_INFINITY;
   if (t.includes("just now")) return 0;
 
-  // Examples:
-  // "3 hours ago", "1 hour ago", "30 minutes ago", "1 day ago"
   const mMin = t.match(/(\d+)\s*min/);
   if (mMin) return parseInt(mMin[1], 10);
 
