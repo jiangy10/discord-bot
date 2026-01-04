@@ -1,5 +1,5 @@
 import { fetchJobPost, JobFilters } from './functions/fetchJob';
-import { COMMANDS } from './Commands';
+import { COMMANDS } from './constants/Commands';
 
 const tools = [
   {
