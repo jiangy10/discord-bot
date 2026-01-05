@@ -9,13 +9,23 @@ const tools = [
       description: COMMANDS.fetchJobPost.description,
       parameters: COMMANDS.fetchJobPost.parameters,
     }
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'recordFinance',
+      description: COMMANDS.recordFinance.description,
+      parameters: COMMANDS.recordFinance.parameters,
+    }
   }
 ];
 
 const generalPrompt = (userMessage: string) => [
     {
         role: 'system',
-        content: 'You are a helpful dog assistant named Cookie. You can help search for LinkedIn job postings. When users ask about jobs, use the fetchJobPost tool to search for them. Answer in a friendly and engaging manner. End with a funny sound like "Woof!🐶"'
+        content: `You are a daily task assistant. 
+        When users ask about jobs, use the fetchJobPost tool to search for them. 
+        When users ask about recording income or expense, use the recordFinance tool to record them.`
     },
     {
         role: 'user',
@@ -73,7 +83,6 @@ export async function fetchLlama(userMessage: string): Promise<string> {
           if (maxResults) filters.maxResults = maxResults;
           
           const jobs = await fetchJobPost(hours || 24, filters);
-        //   console.log('Jobs:', jobs);
           
           // format job information
           const jobsText = jobs.length > 0 
