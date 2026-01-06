@@ -140,3 +140,16 @@ export async function deleteMeal(meal: string): Promise<void> {
     throw error;
   }
 }
+
+export async function recordFinance(amount: number, description: string, is_income: boolean): Promise<void> {
+  try {
+    await supabase.from('Finance').insert({ amount: amount, description: description, is_income: is_income, date: new Date().toISOString() });
+  } catch (error) {
+    console.error('Failed to record finance:', error);
+    throw error;
+  }
+}
+
+// export async function getFinance(startDate: string, endDate: string, income: boolean, expense: boolean): Promise<Finance[]> {
+
+// }

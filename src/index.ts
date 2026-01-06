@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder, Interaction, Message } from 'discord.js';
 import 'dotenv/config';
 import { addItemToCart, readCart } from './storage';
+import { recordFinance } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
 import { fetchJobPost } from './functions/fetchJob';
@@ -167,21 +168,10 @@ client.on(Events.MessageCreate, async (message: Message) => {
   if (message.mentions.has(client.user!, { ignoreEveryone: true, ignoreRoles: true })) {// bot is mentioned by user
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
-    // fetchJobPost(12, {
-    //   keywords: "Software Engineer",
-    //   geoId: "103644278",
-    //   locationAllowlist: ["San Francisco", "Bay Area", "Remote", "San Jose", "Palo Alto", "Sunnyvale", "Mountain View", "Santa Clara", "Cupertino", "Redwood City", "CA"],
-    //   maxResults:5,
-    // }).then(
-    //   (jobs) => {
-    //     const jobList = jobs.map((job) => 
-    //       `- Title: ${job.title}\n\tCompany: ${job.company}\n\tLocation: ${job.location}\n\tURL: ${job.url}`).join('\n');
-    //     message.reply(`Here are the latest job postings:\n${jobList}`);
-    //   }
-    // );
     
-    const llamaResponse = await fetchLlama(messageContent);
-    await message.reply(llamaResponse);
+    recordFinance(100, "Test", true);
+    // const llamaResponse = await fetchLlama(messageContent);
+    // await message.reply(llamaResponse);
   }
 });
 
