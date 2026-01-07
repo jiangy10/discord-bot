@@ -12,13 +12,13 @@ export const COMMANDS = {
         }
     },
     recordFinance:{
-        description: "Record a income or expense.",
+        description: "Record an income or expense. Extract amount, description (preserve Chinese characters exactly), and whether it's income (收入) or expense (消费/支出).",
         parameters: {
             type: "object",
             properties: {
-                amount: { type: "number", minimum: 0.01 },
-                description: { type: "string" },
-                is_income: { type: "boolean" }
+                amount: { type: "number", minimum: 0.01, description: "The amount of money" },
+                description: { type: "string", description: "Description of the transaction. MUST preserve all Chinese characters exactly as they appear in the user's message." },
+                is_income: { type: "boolean", description: "true for income (收入), false for expense (消费/支出)" }
             },
             required: ["amount", "description", "is_income"]
         }

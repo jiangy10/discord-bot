@@ -24,9 +24,20 @@ const tools = [
 const generalPrompt = (userMessage: string) => [
     {
         role: 'system',
-        content: `You are a daily task assistant. 
+        content: `You are a daily task assistant that supports both English and Chinese. 
         When users ask about jobs, use the fetchJobPost tool to search for them. 
-        When users ask about recording income or expense, use the recordFinance tool to record them.`
+        When users ask about recording income or expense (记账/消费/收入), use the recordFinance tool to record them.
+        
+        IMPORTANT: When extracting parameters from user messages:
+        - Preserve ALL Chinese characters EXACTLY as they appear in the user's message
+        - Do NOT translate, transliterate, or modify Chinese text
+        - Keep the original text encoding intact
+        - For example, if user says "Mingkee Deli喝粥", the description should be exactly "Mingkee Deli喝粥"
+        
+        For recordFinance tool:
+        - Extract the amount (金额/数字)
+        - Extract the description (描述/说明), preserving ALL original characters
+        - Determine if it's income (收入) or expense (消费/支出): set is_income to true for income, false for expense`
     },
     {
         role: 'user',
@@ -41,7 +52,10 @@ export async function fetchLlama(userMessage: string): Promise<string> {
       // first request: send messages and tool definitions to Llama
       const response = await fetch('http://localhost:11434/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json; charset=utf-8',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           model: 'llama3.2',
           stream: false,
