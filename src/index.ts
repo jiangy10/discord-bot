@@ -169,9 +169,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
     
-    recordFinance(100, "Test", true);
-    // const llamaResponse = await fetchLlama(messageContent);
-    // await message.reply(llamaResponse);
+    const llamaResponse = await fetchLlama(messageContent);
+    await message.reply(llamaResponse);
   }
 });
 

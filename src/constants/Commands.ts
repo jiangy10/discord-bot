@@ -18,10 +18,9 @@ export const COMMANDS = {
             properties: {
                 amount: { type: "number", minimum: 0.01 },
                 description: { type: "string" },
-                is_income: { type: "boolean" },
-                date: { type: "string", format: "date-time" },
+                is_income: { type: "boolean" }
             },
-            required: ["amount", "description", "is_income", "date"]
+            required: ["amount", "description", "is_income"]
         }
     }
 }as const;

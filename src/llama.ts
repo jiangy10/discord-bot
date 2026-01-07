@@ -1,4 +1,5 @@
 import { handleFetchJobPost } from './functions/fetchJob';
+import { handleRecordFinance } from './functions/recordFinance';
 import { COMMANDS } from './constants/Commands';
 
 const tools = [
@@ -74,8 +75,13 @@ export async function fetchLlama(userMessage: string): Promise<string> {
         console.log(`Tool called: ${functionName}`, functionArgs);
         
         // execute tool call
-        if (functionName === 'fetchJobPost') {
-          return await handleFetchJobPost(functionArgs);
+        switch (functionName) {
+          case 'fetchJobPost':
+            return await handleFetchJobPost(functionArgs);
+          case 'recordFinance':
+            return await handleRecordFinance(functionArgs);
+          default:
+            return 'Woof, something went wrong :<';
         }
       }
       
