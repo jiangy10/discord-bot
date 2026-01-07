@@ -114,3 +114,54 @@ export async function fetchJobPost(hours: number, filters: JobFilters = {}): Pro
   }
 }
 
+export async function handleFetchJobPost(functionArgs: any): Promise<string> {
+  const { hours, keywords, geoId, maxResults } = functionArgs;
+  const filters: JobFilters = {};
+  
+  if (keywords) filters.keywords = keywords;
+  if (geoId) filters.geoId = geoId;
+  if (maxResults) filters.maxResults = maxResults;
+  
+  const jobs = await fetchJobPost(hours || 24, filters);
+  
+  // format job information
+  const jobsText = jobs.length > 0 
+    ? jobs.map((job, idx) => 
+        `${idx + 1}. **${job.title}** at ${job.company}\n   📍 ${job.location}\n   🕒 ${job.postedText}\n   🔗 ${job.url}`
+      ).join('\n\n')
+    : 'No jobs found matching your criteria.';
+  
+  // second request: let Llama generate response based on tool results
+  const finalResponse = await fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'llama3.2',
+      stream: false,
+      messages: [
+        {
+            role: 'system',
+            content: `You are a helpful dog assistant named Cookie. You can help search for LinkedIn job postings.
+            Process the given object of job postings results, only keep the jobs that are in Bay Area or remote in US.
+            Format in following template:
+            - Title 🧑‍💻: 
+            - Company 💼:
+            - Location 📍:
+            - Posted Time 🕒:
+            - URL 🔗:
+            seperate with --------------------------------
+            Start with "Here are the job postings", and end with a funny sound like "Woof!🐶"`
+        },
+        {
+            role: 'user',
+            content: JSON.stringify(jobs)
+        }
+      ],
+    })
+  });
+  console.log('Final response:', finalResponse);
+  
+  const finalData = await finalResponse.json() as { message?: { content?: string } };
+  return finalData.message?.content || jobsText;
+}
+
