@@ -5,7 +5,7 @@ import { recordFinance } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
 import { fetchJobPost } from './functions/fetchJob';
-import { fetchLlama } from './llama';
+import { fetchQwen } from './qwen';
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
 const guildId = process.env.GUILD_ID; // for instant effect in development
@@ -169,8 +169,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
     
-    const llamaResponse = await fetchLlama(messageContent);
-    await message.reply(llamaResponse);
+    const qwenResponse = await fetchQwen(messageContent);
+    await message.reply(qwenResponse);
   }
 });
 

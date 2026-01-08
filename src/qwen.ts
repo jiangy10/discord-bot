@@ -45,11 +45,11 @@ const generalPrompt = (userMessage: string) => [
     }
 ]
 
-export async function fetchLlama(userMessage: string): Promise<string> {
+export async function fetchQwen(userMessage: string): Promise<string> {
     try {
       const messages = generalPrompt(userMessage);
       
-      // first request: send messages and tool definitions to Llama
+      // first request: send messages and tool definitions to Qwen
       const response = await fetch('http://localhost:11434/api/chat', {
         method: 'POST',
         headers: { 
@@ -57,7 +57,7 @@ export async function fetchLlama(userMessage: string): Promise<string> {
           'Accept': 'application/json'
         },
         body: JSON.stringify({
-          model: 'llama3.2',
+          model: 'qwen2.5',
           stream: false,
           messages: messages,
           tools: tools,
@@ -76,8 +76,6 @@ export async function fetchLlama(userMessage: string): Promise<string> {
         } 
       };
       
-      console.log('Llama response:', JSON.stringify(data, null, 2));
-      
       // check if there are tool related calls
       if (data.message?.tool_calls && data.message.tool_calls.length > 0) {
         const toolCall = data.message.tool_calls[0];
@@ -85,8 +83,6 @@ export async function fetchLlama(userMessage: string): Promise<string> {
         const functionArgs = typeof toolCall.function.arguments === 'string' 
           ? JSON.parse(toolCall.function.arguments) 
           : toolCall.function.arguments;
-        
-        console.log(`Tool called: ${functionName}`, functionArgs);
         
         // execute tool call
         switch (functionName) {
@@ -99,10 +95,11 @@ export async function fetchLlama(userMessage: string): Promise<string> {
         }
       }
       
-      // if no tool related calls, return the response from Llama
+      // if no tool related calls, return the response from Qwen
       return data.message?.content || 'Woof, something went wrong :<';
     } catch (error) {
-      console.error('Llama API error:', error);
-      return 'Wooo, not connected to Llama :<';
+      console.error('Qwen API error:', error);
+      return 'Wooo, not connected to Qwen :<';
     }
 }
+

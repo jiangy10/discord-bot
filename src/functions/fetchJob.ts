@@ -131,12 +131,12 @@ export async function handleFetchJobPost(functionArgs: any): Promise<string> {
       ).join('\n\n')
     : 'No jobs found matching your criteria.';
   
-  // second request: let Llama generate response based on tool results
+  // second request: let Qwen generate response based on tool results
   const finalResponse = await fetch('http://localhost:11434/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'llama3.2',
+      model: 'qwen2.5',
       stream: false,
       messages: [
         {
@@ -159,7 +159,6 @@ export async function handleFetchJobPost(functionArgs: any): Promise<string> {
       ],
     })
   });
-  console.log('Final response:', finalResponse);
   
   const finalData = await finalResponse.json() as { message?: { content?: string } };
   return finalData.message?.content || jobsText;
