@@ -37,7 +37,16 @@ const generalPrompt = (userMessage: string) => [
         For recordFinance tool:
         - Extract the amount (金额/数字)
         - Extract the description (描述/说明), preserving ALL original characters
-        - Determine if it's income (收入) or expense (消费/支出): set is_income to true for income, false for expense`
+        - Determine if it's income (收入) or expense (消费/支出):
+          * If message contains keywords: "income", "收入", "入账" → set is_income to true
+          * If message contains keywords: "expense", "消费", "支出", "花费", "开销" → set is_income to false
+          * Use these keywords to help determine is_income, then REMOVE them from the description
+          * The description should NOT contain these indicator keywords (记账/income/收入/入账/expense/消费/支出/花费/开销)
+        
+        Example:
+        - Input: "记账 Amazon-Rio Grande棋 消费39.55"
+        - description should be: "Amazon-Rio Grande棋" (removed "记账" and "消费")
+        - is_income should be: false (because "消费" indicates expense)`
     },
     {
         role: 'user',
