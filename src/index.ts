@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder, Interaction, Message } from 'discord.js';
 import 'dotenv/config';
 import { handleSlashCommand } from './interaction';
+import { fetchClaude } from './claude';
 import http from 'http';
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
@@ -80,8 +81,8 @@ client.on(Events.MessageCreate, async (message: Message) => {
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
 
-    // TODO: wire up Claude + Notion MCP handler (see claude.ts, upcoming commit)
-    await message.reply('🐶 The AI brain is being upgraded — back online soon!');
+    const reply = await fetchClaude(messageContent);
+    await message.reply(reply);
   }
 });
 
