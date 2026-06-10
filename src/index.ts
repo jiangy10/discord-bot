@@ -1,7 +1,5 @@
 import { Client, GatewayIntentBits, Events, REST, Routes, SlashCommandBuilder, Interaction, Message } from 'discord.js';
 import 'dotenv/config';
-import { addItemToCart, readCart } from './storage';
-import { recordFinance } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
 const token = process.env.DISCORD_TOKEN!;
@@ -39,16 +37,6 @@ const commands = [
     .setDescription('Show all items in the shopping cart')
     .toJSON(),
   new SlashCommandBuilder()
-    .setName('shopped')
-    .setDescription('Remove an item from the shopping list')
-    .addStringOption((opt) =>
-      opt
-        .setName('item')
-        .setDescription('Item to remove')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
     .setName('note')
     .setDescription('Take notes')
     .addStringOption((opt) =>
@@ -61,81 +49,6 @@ const commands = [
   new SlashCommandBuilder()
     .setName('list-notes')
     .setDescription('List all notes')
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('delete-note')
-    .setDescription('Delete a note')
-    .addStringOption((opt) =>
-      opt
-        .setName('note')
-        .setDescription('Note to delete')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('save-file')
-    .setDescription('Save a file')
-    .addAttachmentOption((opt) =>
-      opt
-        .setName('file')
-        .setDescription('File to save')
-        .setRequired(true),
-    )
-    .addStringOption((opt) =>
-      opt
-        .setName('description')
-        .setDescription('Description of the file')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('get-file')
-    .setDescription('Get a file')
-    .addStringOption((opt) =>
-      opt
-        .setName('keyword')
-        .setDescription('File name or any keyword')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('meal')
-    .setDescription('Add a meal to meal plan')
-    .addStringOption((opt) =>
-      opt
-        .setName('meal')
-        .setDescription('Meal to add')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('list-meals')
-    .setDescription('List all meals')
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('delete-meal')
-    .setDescription('Delete a meal from meal plan')
-    .addStringOption((opt) =>
-      opt
-        .setName('meal')
-        .setDescription('Meal to delete')
-        .setRequired(true),
-    )
-    .toJSON(),
-  new SlashCommandBuilder()
-    .setName('reminder')
-    .setDescription('Set a reminder')
-    .addStringOption((opt) =>
-      opt
-        .setName('date')
-        .setDescription('Date of the reminder')
-        .setRequired(true),
-    ).addStringOption((opt) =>
-      opt
-        .setName('description')
-        .setDescription('Description of the reminder')
-        .setRequired(true),
-    )
     .toJSON(),
 ];
 
