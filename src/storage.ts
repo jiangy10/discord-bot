@@ -1,32 +1,37 @@
-import { createClient } from '@supabase/supabase-js'
+import { Client as NotionClient } from '@notionhq/client'
 import { File } from './models'
 
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseKey: string = process.env.SUPABASE_KEY!
-if (!supabaseKey) {
-  throw new Error('Missing SUPABASE_KEY');
-}
+const notion = new NotionClient({ auth: process.env.NOTION_TOKEN })
+const NOTES_DB = process.env.NOTION_DB_NOTES!
+const FILES_DB = process.env.NOTION_DB_FILES!
+const CART_DB = process.env.NOTION_DB_SHOPPING_CART!
+const MEALS_DB = process.env.NOTION_DB_MEALS!
+const FINANCE_DB = process.env.NOTION_DB_FINANCE!
 
-// Init database client
-const supabase = createClient(supabaseUrl, supabaseKey)
+// ── Shopping Cart ────────────────────────────────────────────────────────────
 
 export async function readCart(): Promise<string[]> {
+  if (!CART_DB) return [];
   try {
-    const { data, error } = await supabase.from('ShoppingCart').select('item');
-    if (error) {
-      console.error('Failed to read cart from Supabase:', error);
-      return [];
-    }
-    return data.map((entry: { item: string }) => entry.item);
+    const response = await notion.databases.query({ database_id: CART_DB });
+    return response.results.map((page: any) =>
+      page.properties?.Name?.title?.[0]?.plain_text ?? ''
+    ).filter(Boolean);
   } catch (error) {
-    console.error('Unexpected error while reading cart:', error);
+    console.error('Failed to read cart:', error);
     return [];
   }
 }
 
 export async function addItemToCart(item: string): Promise<void> {
+  if (!CART_DB) throw new Error('NOTION_DB_SHOPPING_CART not configured');
   try {
-    await supabase.from('ShoppingCart').insert({ item: item });
+    await notion.pages.create({
+      parent: { database_id: CART_DB },
+      properties: {
+        Name: { title: [{ text: { content: item } }] },
+      },
+    });
   } catch (error) {
     console.error('Failed to add item to cart:', error);
     throw error;
@@ -34,21 +39,38 @@ export async function addItemToCart(item: string): Promise<void> {
 }
 
 export async function removeItemFromCart(item: string): Promise<void> {
-  if (item === 'all') {
-    await supabase.from('ShoppingCart').delete().neq('id', 0);
-    return;
-  }
+  if (!CART_DB) throw new Error('NOTION_DB_SHOPPING_CART not configured');
   try {
-    await supabase.from('ShoppingCart').delete().eq('item', item);
+    if (item === 'all') {
+      const response = await notion.databases.query({ database_id: CART_DB });
+      await Promise.all(response.results.map((page: any) =>
+        notion.pages.update({ page_id: page.id, archived: true })
+      ));
+      return;
+    }
+    const response = await notion.databases.query({
+      database_id: CART_DB,
+      filter: { property: 'Name', title: { equals: item } },
+    });
+    await Promise.all(response.results.map((page: any) =>
+      notion.pages.update({ page_id: page.id, archived: true })
+    ));
   } catch (error) {
     console.error('Failed to remove item from cart:', error);
     throw error;
   }
 }
 
+// ── Notes ────────────────────────────────────────────────────────────────────
+
 export async function addNote(note: string): Promise<void> {
   try {
-    await supabase.from('Notes').insert({ note: note });
+    await notion.pages.create({
+      parent: { database_id: NOTES_DB },
+      properties: {
+        Name: { title: [{ text: { content: note } }] },
+      },
+    });
   } catch (error) {
     console.error('Failed to add note:', error);
     throw error;
@@ -57,34 +79,52 @@ export async function addNote(note: string): Promise<void> {
 
 export async function readNotes(): Promise<string[]> {
   try {
-    const { data, error } = await supabase.from('Notes').select('note');
-    if (error) {
-      console.error('Failed to read notes:', error);
-      return [];
-    }
-    return data.map((entry: { note: string }) => entry.note);
+    const response = await notion.databases.query({ database_id: NOTES_DB });
+    return response.results.map((page: any) => {
+      const title = page.properties?.Name?.title;
+      return title?.[0]?.plain_text ?? '';
+    }).filter(Boolean);
   } catch (error) {
     console.error('Failed to read notes:', error);
-    throw error;
+    return [];
   }
 }
 
 export async function removeNoteFromNotes(note: string): Promise<void> {
-  if (note === 'all') {
-    await supabase.from('Notes').delete().neq('id', 0);
-    return;
-  }
   try {
-    await supabase.from('Notes').delete().eq('note', note);
+    if (note === 'all') {
+      const response = await notion.databases.query({ database_id: NOTES_DB });
+      await Promise.all(response.results.map((page: any) =>
+        notion.pages.update({ page_id: page.id, archived: true })
+      ));
+      return;
+    }
+    const response = await notion.databases.query({
+      database_id: NOTES_DB,
+      filter: { property: 'Name', title: { equals: note } },
+    });
+    await Promise.all(response.results.map((page: any) =>
+      notion.pages.update({ page_id: page.id, archived: true })
+    ));
   } catch (error) {
-    console.error('Failed to remove note from notes:', error);
+    console.error('Failed to remove note:', error);
     throw error;
   }
 }
 
+// ── Files ────────────────────────────────────────────────────────────────────
+
 export async function addFile(fileURL: string, description: string, channelId: string, interactionId: string): Promise<void> {
   try {
-    await supabase.from('Files').insert({ url: fileURL, description: description, channelId: channelId, interactionId: interactionId });
+    await notion.pages.create({
+      parent: { database_id: FILES_DB },
+      properties: {
+        Name: { title: [{ text: { content: fileURL } }] },
+        Description: { rich_text: [{ text: { content: description } }] },
+        ChannelId: { rich_text: [{ text: { content: channelId } }] },
+        InteractionId: { rich_text: [{ text: { content: interactionId } }] },
+      },
+    });
   } catch (error) {
     console.error('Failed to add file:', error);
     throw error;
@@ -93,21 +133,36 @@ export async function addFile(fileURL: string, description: string, channelId: s
 
 export async function getFile(keywords: string): Promise<File[]> {
   try {
-    const { data, error } = await supabase.from('Files').select('*').ilike('description', `%${keywords}%`);
-    if (error) {
-      console.error('Failed to get file:', error);
-      return [];
-    }
-    return data;
+    const response = await notion.databases.query({
+      database_id: FILES_DB,
+      filter: {
+        property: 'Description',
+        rich_text: { contains: keywords },
+      },
+    });
+    return response.results.map((page: any) => ({
+      url: page.properties?.Name?.title?.[0]?.plain_text ?? '',
+      description: page.properties?.Description?.rich_text?.[0]?.plain_text ?? '',
+      channelId: page.properties?.ChannelId?.rich_text?.[0]?.plain_text ?? '',
+      interactionId: page.properties?.InteractionId?.rich_text?.[0]?.plain_text ?? '',
+    }));
   } catch (error) {
     console.error('Failed to get file:', error);
     throw error;
   }
 }
 
+// ── Meals ────────────────────────────────────────────────────────────────────
+
 export async function addMeal(meal: string): Promise<void> {
+  if (!MEALS_DB) throw new Error('NOTION_DB_MEALS not configured');
   try {
-    await supabase.from('Meals').insert({ meal: meal });
+    await notion.pages.create({
+      parent: { database_id: MEALS_DB },
+      properties: {
+        Name: { title: [{ text: { content: meal } }] },
+      },
+    });
   } catch (error) {
     console.error('Failed to add meal:', error);
     throw error;
@@ -115,41 +170,57 @@ export async function addMeal(meal: string): Promise<void> {
 }
 
 export async function getMeals(): Promise<string[]> {
+  if (!MEALS_DB) return [];
   try {
-    const { data, error } = await supabase.from('Meals').select('*');
-    if (error) {
-      console.error('Failed to get meal:', error);
-      return [];
-    }
-    return data.map((entry: { meal: string }) => entry.meal);
+    const response = await notion.databases.query({ database_id: MEALS_DB });
+    return response.results.map((page: any) =>
+      page.properties?.Name?.title?.[0]?.plain_text ?? ''
+    ).filter(Boolean);
   } catch (error) {
-    console.error('Failed to get meal:', error);
-    throw error;
+    console.error('Failed to get meals:', error);
+    return [];
   }
 }
 
 export async function deleteMeal(meal: string): Promise<void> {
-  if (meal === 'all') {
-    await supabase.from('Meals').delete().neq('id', 0);
-    return;
-  }
+  if (!MEALS_DB) throw new Error('NOTION_DB_MEALS not configured');
   try {
-    await supabase.from('Meals').delete().eq('meal', meal);
+    if (meal === 'all') {
+      const response = await notion.databases.query({ database_id: MEALS_DB });
+      await Promise.all(response.results.map((page: any) =>
+        notion.pages.update({ page_id: page.id, archived: true })
+      ));
+      return;
+    }
+    const response = await notion.databases.query({
+      database_id: MEALS_DB,
+      filter: { property: 'Name', title: { equals: meal } },
+    });
+    await Promise.all(response.results.map((page: any) =>
+      notion.pages.update({ page_id: page.id, archived: true })
+    ));
   } catch (error) {
     console.error('Failed to delete meal:', error);
     throw error;
   }
 }
 
+// ── Finance ──────────────────────────────────────────────────────────────────
+
 export async function recordFinance(amount: number, description: string, is_income: boolean): Promise<void> {
+  if (!FINANCE_DB) throw new Error('NOTION_DB_FINANCE not configured');
   try {
-    await supabase.from('Finance').insert({ amount: amount, description: description, is_income: is_income, date: new Date().toISOString() });
+    await notion.pages.create({
+      parent: { database_id: FINANCE_DB },
+      properties: {
+        Name: { title: [{ text: { content: description } }] },
+        Amount: { number: amount },
+        IsIncome: { checkbox: is_income },
+        Date: { date: { start: new Date().toISOString() } },
+      },
+    });
   } catch (error) {
     console.error('Failed to record finance:', error);
     throw error;
   }
 }
-
-// export async function getFinance(startDate: string, endDate: string, income: boolean, expense: boolean): Promise<Finance[]> {
-
-// }
