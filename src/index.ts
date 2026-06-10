@@ -4,8 +4,6 @@ import { addItemToCart, readCart } from './storage';
 import { recordFinance } from './storage';
 import { handleSlashCommand } from './interaction';
 import http from 'http';
-import { fetchJobPost } from './functions/fetchJob';
-import { fetchQwen } from './qwen';
 const token = process.env.DISCORD_TOKEN!;
 const clientId = process.env.DISCORD_CLIENT_ID!;
 const guildId = process.env.GUILD_ID; // for instant effect in development
@@ -168,9 +166,9 @@ client.on(Events.MessageCreate, async (message: Message) => {
   if (message.mentions.has(client.user!, { ignoreEveryone: true, ignoreRoles: true })) {// bot is mentioned by user
     // remove bot mention part from message content
     const messageContent = message.content.replace(`<@${client.user?.id}>`, '').trim();
-    
-    const qwenResponse = await fetchQwen(messageContent);
-    await message.reply(qwenResponse);
+
+    // TODO: wire up Claude + Notion MCP handler (see claude.ts, upcoming commit)
+    await message.reply('🐶 The AI brain is being upgraded — back online soon!');
   }
 });
 
